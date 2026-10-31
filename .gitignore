@@ -4,3 +4,6 @@ dist/
 .local-preview/
 *.tsbuildinfo
 *.log
+
+# build artefacts
+*.tgz
