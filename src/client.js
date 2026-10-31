@@ -27,28 +27,28 @@ window.__ModuleLoader__.load({
     const ENTRY_ID = 'llm-antigravity-acp'
     /** Live fields owned by this card; ordinary fields stay in the host config editor. */
     const FIELDS = [
-      { key: 'autoWarmup', group: 'general', checkbox: true, defaultChecked: true, label: '启动时自动预热', hint: '提前启动并保留连接，不发送模型消息。保存后下次启用插件生效；本次可点击“立即预热”。' },
-      { key: 'reuseSessions', group: 'general', checkbox: true, defaultChecked: true, label: '复用 ACP 会话（增量发送）', hint: '校验历史与实际输出后只发新增消息；变化的上下文仍发送，不一致时自动重建。' },
-      { key: 'proxyUrl', group: 'network', label: '出网代理', placeholder: 'http://127.0.0.1:7890', hint: '此处配置优先；留空则继承宿主代理环境变量，宿主也未配置时才直连。支持 HTTP、HTTPS 与 SOCKS5。' },
-      { key: 'proxyBypass', group: 'network', label: '代理排除列表', placeholder: '*.internal,example.internal', hint: '逗号分隔，支持域名与通配后缀，不支持 CIDR。localhost/127.0.0.1/::1 始终自动排除（私有 MCP 桥在 loopback）。' },
-      { key: 'agyCliPath', group: 'network', label: '官方 CLI 路径（可选）', placeholder: '留空自动查找 agy', hint: '用于模型目录、套餐额度和 AI Credits。自定义安装位置可填写完整可执行文件路径；CLI 登录与 ACP 登录独立。' },
-      { key: 'resumeSessions', group: 'advanced', checkbox: true, label: '重启后恢复 ACP 会话', hint: '尝试加载本地映射，失败则重建；仅保存 ID 与指纹。需要同时开启会话复用。' },
-      { key: 'keepProcessAfterCancel', group: 'advanced', checkbox: true, label: '取消后保留已停止的进程', hint: '仅在 agent 确认停止后保留；等待期间新轮排队，超时或通信失败回收。' },
-      { key: 'cancelGraceMs', group: 'advanced', numeric: true, defaultValue: 30000, min: 0, max: 60000, label: '取消确认宽限（毫秒）', hint: '默认 30000；0 表示不等待并立即回收，不会复用未确认连接。仅开启取消后保留进程时生效。' },
-      { key: 'idleRecycleMs', group: 'advanced', numeric: true, defaultValue: 300000, min: 0, max: 3600000, label: '进程空闲回收（毫秒）', hint: '默认 300000（5 分钟），0 禁用。聊天、预热、目录发现结束后统一计时；等待工具不算空闲。' },
+      { key: 'autoWarmup', group: 'general', checkbox: true, defaultChecked: true, label: 'Прогрев при запуске', hint: 'Заранее запускает и удерживает соединение, не отправляя сообщений модели. Применяется при следующем включении плагина; сейчас можно нажать «Прогреть сразу».' },
+      { key: 'reuseSessions', group: 'general', checkbox: true, defaultChecked: true, label: 'Переиспользовать ACP-сессию (досылка только нового)', hint: 'После сверки истории с фактическим выводом отправляются только новые сообщения; изменившийся контекст отправляется, при расхождении сессия пересоздаётся.' },
+      { key: 'proxyUrl', group: 'network', label: 'Исходящий прокси', placeholder: 'http://127.0.0.1:7890', hint: 'Приоритет у этого значения; если пусто — берётся прокси из окружения хоста, и только при его отсутствии соединение прямое. Поддерживаются HTTP, HTTPS и SOCKS5.' },
+      { key: 'proxyBypass', group: 'network', label: 'Исключения прокси', placeholder: '*.internal,example.internal', hint: 'Через запятую; поддерживаются домены и wildcard-суффиксы, CIDR — нет. localhost/127.0.0.1/::1 исключаются всегда (приватный MCP-мост работает через loopback).' },
+      { key: 'agyCliPath', group: 'network', label: 'Путь к официальному CLI (необязательно)', placeholder: 'пусто — искать agy автоматически', hint: 'Используется для каталога моделей, квот тарифа и AI Credits. При нестандартной установке укажите полный путь к исполняемому файлу; вход в CLI и вход в ACP независимы.' },
+      { key: 'resumeSessions', group: 'advanced', checkbox: true, label: 'Восстанавливать ACP-сессию после перезапуска', hint: 'Пытается загрузить локальную карту, при неудаче пересоздаёт; хранятся только ID и отпечатки. Требует включённого переиспользования сессий.' },
+      { key: 'keepProcessAfterCancel', group: 'advanced', checkbox: true, label: 'Оставлять процесс после отмены', hint: 'Процесс сохраняется только после подтверждения остановки агентом; новые ходы ждут в очереди, при таймауте или сбое связи процесс освобождается.' },
+      { key: 'cancelGraceMs', group: 'advanced', numeric: true, defaultValue: 30000, min: 0, max: 60000, label: 'Ожидание подтверждения отмены (мс)', hint: 'По умолчанию 30000; 0 — не ждать и сразу освобождать, неподтверждённое соединение не переиспользуется. Действует только при включённом «Оставлять процесс после отмены».' },
+      { key: 'idleRecycleMs', group: 'advanced', numeric: true, defaultValue: 300000, min: 0, max: 3600000, label: 'Освобождение простаивающего процесса (мс)', hint: 'По умолчанию 300000 (5 минут), 0 — выключено. Отсчёт идёт после чата, прогрева и обновления каталога; ожидание инструментов простоем не считается.' },
     ]
 
     /** 逐模型设置：键是 DSH 选择器里的模型 ID，值是开关、默认档位、显示名与官方 ID 映射。 */
     const OVERRIDES_KEY = 'modelOverrides'
-    const OVERRIDES_LABEL = '模型列表设置'
+    const OVERRIDES_LABEL = 'Настройки списка моделей'
     const EFFORT_OPTIONS = [
-      { value: '', label: '跟随官方' },
-      { value: 'low', label: '低' },
-      { value: 'medium', label: '中' },
-      { value: 'high', label: '高' },
+      { value: '', label: 'Как в официальном клиенте' },
+      { value: 'low', label: 'низкий' },
+      { value: 'medium', label: 'средний' },
+      { value: 'high', label: 'высокий' },
     ]
     const EFFORT_IDS = new Set(EFFORT_OPTIONS.map((entry) => entry.value).filter(Boolean))
-    const MODALITY_LABELS = { text: '文本', image: '图片', audio: '音频', video: '视频', file: '文件' }
+    const MODALITY_LABELS = { text: 'текст', image: 'изображение', audio: 'аудио', video: 'видео', file: 'файл' }
 
     /** 只保留有意义的字段：启用是默认值，空串等于未设置。 */
     function canonicalOverride(row) {
@@ -92,17 +92,17 @@ window.__ModuleLoader__.load({
     function unwrap(result) {
       if (result && typeof result === 'object' && 'ok' in result) {
         if (result.ok) return result.value
-        throw new Error(result.error?.message || '未知错误')
+        throw new Error(result.error?.message || 'Неизвестная ошибка')
       }
       return result
     }
 
     const RUNTIME_PHASES = {
-      idle: '尚未启动', binary: '准备运行文件', credentials: '准备登录态', spawn: '启动进程',
-      initialize: '等待握手', authenticate: '等待登录', ready: '连接就绪', connection: '准备连接',
-      session: '建立会话', model: '选择模型', prompt: '等待模型首块', streaming: '正在输出',
-      'waiting-tools': '等待 DSH 工具结果', continuing: '等待工具后的回复', recycling: '回收进程',
-      stopped: '已停止', error: '连接异常', disposed: '插件已卸载',
+      idle: 'не запущено', binary: 'подготовка файла', credentials: 'подготовка учётных данных', spawn: 'запуск процесса',
+      initialize: 'ожидание рукопожатия', authenticate: 'ожидание входа', ready: 'соединение готово', connection: 'подготовка соединения',
+      session: 'создание сессии', model: 'выбор модели', prompt: 'ожидание первого блока', streaming: 'генерация ответа',
+      'waiting-tools': 'ожидание результата инструмента DSH', continuing: 'ожидание ответа после инструмента', recycling: 'освобождение процесса',
+      stopped: 'остановлено', error: 'ошибка соединения', disposed: 'плагин выгружен',
     }
     function runtimeBusy(runtime) {
       if (runtime?.queue && (runtime.queue.active > 0 || runtime.queue.parked > 0 || runtime.queue.waiting > 0)) return true
@@ -112,32 +112,32 @@ window.__ModuleLoader__.load({
       if (!Number.isFinite(ms)) return '—'
       if (ms < 1000) return Math.round(ms) + ' ms'
       if (ms < 60000) return (ms / 1000).toFixed(2) + ' s'
-      return Math.floor(ms / 60000) + ' 分 ' + Math.floor(ms % 60000 / 1000) + ' 秒'
+      return Math.floor(ms / 60000) + ' мин ' + Math.floor(ms % 60000 / 1000) + ' с'
     }
     /** 连接中且进程仍在启动时，给出阶段、已用时间与冷启动提示（官方进程冷启动可达 1 分钟）。 */
     function startupHint(account) {
       const runtime = account?.runtime
       if (account?.state !== 'connecting' || !runtime || !['binary', 'credentials', 'spawn', 'initialize', 'authenticate', 'session'].includes(runtime.phase)) return undefined
-      const slow = ['spawn', 'initialize'].includes(runtime.phase) ? '；官方进程冷启动首次可能需要约 1 分钟，请耐心等待' : ''
-      return (RUNTIME_PHASES[runtime.phase] ?? runtime.phase) + '… 已用 ' + duration(runtime.phaseElapsedMs) + slow
+      const slow = ['spawn', 'initialize'].includes(runtime.phase) ? '; первый холодный старт официального процесса может занять около минуты' : ''
+      return (RUNTIME_PHASES[runtime.phase] ?? runtime.phase) + '… прошло ' + duration(runtime.phaseElapsedMs) + slow
     }
     function connectionStatus(account, registered) {
       const runtime = account?.runtime
       const ready = runtime?.phase === 'ready'
       const busy = runtimeBusy(runtime) || ['connecting', 'cancelling'].includes(account?.state)
       const error = account?.state === 'error' || runtime?.phase === 'error' || registered === false
-      const label = registered === false ? 'Provider 未注册'
-        : error ? '连接需要检查'
-          : busy ? account?.state === 'cancelling' ? '正在取消连接' : '正在准备连接'
-            : ready ? account?.state === 'connected' ? '账户已验证' : 'ACP 已预热'
-              : account?.state === 'cancelled' || runtime?.phase === 'stopped' ? '连接已停止'
-                : account?.state === 'connected' ? '账户已验证' : '尚未验证连接'
+      const label = registered === false ? 'Provider не зарегистрирован'
+        : error ? 'соединение требует проверки'
+          : busy ? account?.state === 'cancelling' ? 'отмена подключения' : 'подготовка подключения'
+            : ready ? account?.state === 'connected' ? 'аккаунт проверен' : 'ACP прогрет'
+              : account?.state === 'cancelled' || runtime?.phase === 'stopped' ? 'соединение остановлено'
+                : account?.state === 'connected' ? 'аккаунт проверен' : 'соединение не проверено'
       const description = account?.runtime?.phase === 'stopped'
-        ? 'ACP 连接已停止，可以重新预热。'
+        ? 'ACP-соединение остановлено, можно прогреть заново.'
         : account?.runtime?.phase === 'error'
-          ? account.runtime.error ?? account?.message ?? 'ACP 连接异常，请重试。'
-          : registered === false ? '请确认插件已启用，Host 与 Client 均已加载。'
-            : startupHint(account) ?? account?.message ?? '连接后可验证账户并读取模型目录，不会发送聊天消息。'
+          ? account.runtime.error ?? account?.message ?? 'Ошибка ACP-соединения, повторите попытку.'
+          : registered === false ? 'Убедитесь, что плагин включён и загружены и Host, и Client.'
+            : startupHint(account) ?? account?.message ?? 'После подключения можно проверить аккаунт и прочитать каталог моделей — сообщения в чат не отправляются.'
       return { label, description, ready, busy, error, color: error ? '#d97757' : ready ? '#25b879' : busy ? '#d99b28' : '#8b909a' }
     }
     function StatusDot({ color }) {
@@ -154,19 +154,19 @@ window.__ModuleLoader__.load({
         h('span', { style: { opacity: .65 } }, label), h('span', { style: { textAlign: 'right', fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' } }, value))
       const round = runtime.round
       const queue = runtime.queue
-      return h('div', { 'aria-label': 'ACP 生命周期与计时', style: { display: 'grid', gap: '8px', fontSize: '12px', lineHeight: 1.5 } },
-        row('当前状态', (RUNTIME_PHASES[runtime.phase] ?? runtime.phase) + ' · ' + duration(runtime.phaseElapsedMs)),
-        queue ? row('会话调度', '运行 ' + queue.active + ' · 等待工具 ' + queue.parked + ' · 排队 ' + queue.waiting) : null,
-        queue ? row('并发连接', queue.workers + ' / ' + queue.capacity) : null,
-        runtime.processRunning ? row('进程已运行', duration(runtime.uptimeMs)) : null,
-        row('进程统计', '启动 ' + runtime.starts + ' · 复用 ' + runtime.reuses + ' · 回收 ' + runtime.recycles),
-        runtime.startup ? row('最近启动总耗时', duration(runtime.startup.elapsedMs)) : null,
+      return h('div', { 'aria-label': 'Жизненный цикл ACP и тайминги', style: { display: 'grid', gap: '8px', fontSize: '12px', lineHeight: 1.5 } },
+        row('Текущее состояние', (RUNTIME_PHASES[runtime.phase] ?? runtime.phase) + ' · ' + duration(runtime.phaseElapsedMs)),
+        queue ? row('Планирование сессий', 'активных ' + queue.active + ' · ждут инструмент ' + queue.parked + ' · в очереди ' + queue.waiting) : null,
+        queue ? row('Параллельные соединения', queue.workers + ' / ' + queue.capacity) : null,
+        runtime.processRunning ? row('Процесс работает', duration(runtime.uptimeMs)) : null,
+        row('Статистика процесса', 'запусков ' + runtime.starts + ' · переиспользований ' + runtime.reuses + ' · освобождений ' + runtime.recycles),
+        runtime.startup ? row('Длительность последнего запуска', duration(runtime.startup.elapsedMs)) : null,
         ...Object.entries(runtime.startup?.timings ?? {}).map(([name, ms]) => row(RUNTIME_PHASES[name] ?? name, duration(ms))),
-        round ? row('当前 / 最近回合', round.model + ' · ' + duration(round.elapsedMs)) : null,
+        round ? row('Текущий / последний ход', round.model + ' · ' + duration(round.elapsedMs)) : null,
         ...Object.entries(round?.timings ?? {}).map(([name, ms]) => row(RUNTIME_PHASES[name] ?? name, duration(ms))),
-        round?.firstChunkMs !== undefined ? row('发送 prompt → 首块', duration(round.firstChunkMs)) : null,
-        round?.firstToolMs !== undefined ? row('发送 prompt → 首个工具', duration(round.firstToolMs)) : null,
-        round?.continuations ? row('工具续轮', round.continuations + ' 次 · 最近 ' + duration(round.lastContinuationMs)) : null,
+        round?.firstChunkMs !== undefined ? row('prompt → первый блок', duration(round.firstChunkMs)) : null,
+        round?.firstToolMs !== undefined ? row('prompt → первый инструмент', duration(round.firstToolMs)) : null,
+        round?.continuations ? row('Продолжения после инструментов', round.continuations + ' раз · последнее ' + duration(round.lastContinuationMs)) : null,
         runtime.error ? h('p', { role: 'alert', style: { margin: '4px 0 0', color: '#b42318', overflowWrap: 'anywhere' } }, runtime.error) : null)
     }
     function SectionHeading({ eyebrow, title, description, action }) {
@@ -224,24 +224,24 @@ window.__ModuleLoader__.load({
               h('code', { style: { fontSize: '11px', opacity: .55, overflowWrap: 'anywhere' } }, row.id))),
           row.inCatalog
             ? (Array.isArray(row.inputModalities) && row.inputModalities.length
-              ? h('span', { style: { flex: '0 0 auto', fontSize: '10px', padding: '2px 7px', borderRadius: '99px', background: TRACK } }, row.inputModalities.map((modality) => MODALITY_LABELS[modality] ?? modality).join('、'))
+              ? h('span', { style: { flex: '0 0 auto', fontSize: '10px', padding: '2px 7px', borderRadius: '99px', background: TRACK } }, row.inputModalities.map((modality) => MODALITY_LABELS[modality] ?? modality).join(', '))
               : null)
-            : h('span', { title: '该 ID 来自已保存的设置，当前目录里没有；仍然可以修改或清除', style: { flex: '0 0 auto', fontSize: '10px', padding: '2px 7px', borderRadius: '99px', color: '#946200', background: 'rgba(217,155,40,.12)' } }, '不在当前目录')),
+            : h('span', { title: 'Этот ID взят из сохранённых настроек и отсутствует в текущем каталоге; его всё ещё можно изменить или удалить', style: { flex: '0 0 auto', fontSize: '10px', padding: '2px 7px', borderRadius: '99px', color: '#946200', background: 'rgba(217,155,40,.12)' } }, 'нет в текущем каталоге')),
         h('div', { style: { display: 'grid', gap: '6px', gridTemplateColumns: 'minmax(120px, 160px) minmax(0, 1fr)' } },
           h('div', { style: { display: 'grid', gap: '4px', minWidth: 0 } },
-            h('label', { htmlFor: inputId + '-effort', style: labelStyle }, '默认思考档位'),
+            h('label', { htmlFor: inputId + '-effort', style: labelStyle }, 'Уровень размышления по умолчанию'),
             h('select', { id: inputId + '-effort', name: 'model-effort-' + row.id, disabled, value: EFFORT_IDS.has(override.effort) ? override.effort : '',
               onChange: (event) => onEdit(row.id, { effort: event.target.value }),
               style: { ...inputStyle, cursor: disabled ? 'not-allowed' : 'pointer' } },
               ...EFFORT_OPTIONS.map((option) => h('option', { key: option.value, value: option.value }, option.label)))),
           h('div', { style: { display: 'grid', gap: '4px', minWidth: 0 } },
-            h('label', { htmlFor: inputId + '-target', style: labelStyle }, '映射到官方模型 ID'),
+            h('label', { htmlFor: inputId + '-target', style: labelStyle }, 'Сопоставить с официальным ID модели'),
             h('input', { id: inputId + '-target', name: 'model-target-' + row.id, type: 'text', disabled, value: override.target ?? '',
-              placeholder: '留空按家族 + 档位自动路由', onChange: (event) => onEdit(row.id, { target: event.target.value }), style: inputStyle }))),
+              placeholder: 'пусто — авто-маршрутизация по семейству и уровню', onChange: (event) => onEdit(row.id, { target: event.target.value }), style: inputStyle }))),
         h('div', { style: { display: 'grid', gap: '4px' } },
-          h('label', { htmlFor: inputId + '-name', style: labelStyle }, '显示名'),
+          h('label', { htmlFor: inputId + '-name', style: labelStyle }, 'Отображаемое имя'),
           h('input', { id: inputId + '-name', name: 'model-name-' + row.id, type: 'text', disabled, value: override.name ?? '',
-            placeholder: row.inCatalog ? '留空使用「' + row.name + '」' : '留空显示模型 ID', onChange: (event) => onEdit(row.id, { name: event.target.value }), style: inputStyle })))
+            placeholder: row.inCatalog ? 'пусто — использовать «' + row.name + '»' : 'пусто — показывать ID модели', onChange: (event) => onEdit(row.id, { name: event.target.value }), style: inputStyle })))
     }
 
     /**
@@ -251,18 +251,18 @@ window.__ModuleLoader__.load({
     function ModelOverrideList({ rows, overrides, disabled, onEdit }) {
       if (rows.length === 0) {
         return h('p', { style: { margin: 0, fontSize: '12px', lineHeight: 1.6, opacity: .6 } },
-          '还没有模型目录。连接 / 登录 ACP 或刷新模型目录后，可在此逐项设置显示开关、默认思考档位与映射。')
+          'Каталог моделей пока пуст. После подключения, входа в ACP или обновления каталога здесь можно настроить видимость, уровень размышления и сопоставление для каждой модели.')
       }
       const hidden = rows.filter((row) => overrideFor(overrides, row.id).enabled === false).length
       return h('div', { style: { display: 'grid', gap: '10px' } },
         h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: '11px', opacity: .62 } },
-          h('span', null, rows.length + ' 个模型'),
-          hidden ? h('span', null, hidden + ' 个已从选择器隐藏') : null,
-          h('span', null, '映射与显示名保存后生效；当前会话已选模型不变')),
+          h('span', null, rows.length + ' моделей'),
+          hidden ? h('span', null, hidden + ' скрыто из селектора') : null,
+          h('span', null, 'Сопоставление и имя применяются после сохранения; выбранная в сессии модель не меняется')),
         // 全部停用时本 provider 会从 DSH 选择器里消失，这里必须说清原因。
         hidden === rows.length
           ? h('p', { role: 'status', style: { margin: 0, fontSize: '11px', lineHeight: 1.6, color: '#946200' } },
-            '所有模型都已隐藏：保存后 Antigravity 将不出现在 DSH 模型选择器中，重新启用任一项即可恢复。')
+            'Все модели скрыты: после сохранения Antigravity исчезнет из селектора моделей DSH. Включите любую модель, чтобы вернуть.')
           : null,
         ...rows.map((row) => h(ModelOverrideRow, {
           key: row.id, row, override: overrideFor(overrides, row.id), disabled,
@@ -286,12 +286,12 @@ window.__ModuleLoader__.load({
         if (force) manualModelPull.current = true
         const version = ++modelVersion.current
         setModelBusy(true)
-        if (force) setModelMessage('正在拉取模型目录…')
+        if (force) setModelMessage('Загрузка каталога моделей…')
         try {
           const value = unwrap(await props.control('models', force ? { force: true } : undefined))
           if (!alive.current || version !== modelVersion.current) return
           setModels(value.models ?? [])
-          setModelMessage(value.status === 'error' ? value.message : (value.models?.length ? '目录已更新；不会自动替换当前会话的已选模型。' : '暂无模型目录。连接 / 登录 ACP 可验证会话并读取目录；也可从已登录的官方 CLI 拉取。'))
+          setModelMessage(value.status === 'error' ? value.message : (value.models?.length ? 'Каталог обновлён; выбранная модель текущей сессии не заменяется автоматически.' : 'Каталог моделей отсутствует. Подключение или вход в ACP проверит сессию и прочитает каталог; можно также взять его из уже авторизованного официального CLI.'))
         } catch (error) { if (alive.current && version === modelVersion.current) setModelMessage(error instanceof Error ? error.message : String(error)) }
         finally {
           if (force) manualModelPull.current = false
@@ -379,7 +379,7 @@ window.__ModuleLoader__.load({
         // 这里降级为卡片内可读错误，绝不让异常穿出组件击穿 settings.section。
         try {
           if (!remote?.settings?.describe) {
-            setStatus({ kind: 'error', text: '宿主未提供 settings.describe，无法在此编辑配置' })
+            setStatus({ kind: 'error', text: 'Хост не предоставил settings.describe, редактирование настроек здесь невозможно' })
             setLoading(false)
             return
           }
@@ -423,7 +423,7 @@ window.__ModuleLoader__.load({
           setConflicts((previous) => [...new Set([...previous.filter((key) => dirty.current.has(key)), ...changed])])
           setWritable(settings?.writable === true)
           setRegistered(rows.some((row) => row?.id === PROVIDER))
-          if (!found) setStatus({ kind: 'error', text: '宿主尚未提供 Antigravity ACP 的可编辑设置。请确认 Host 与 Client 插件版本一致，并重新加载插件后刷新配置。' })
+          if (!found) setStatus({ kind: 'error', text: 'Хост пока не предоставил редактируемые настройки Antigravity ACP. Убедитесь, что версии плагина Host и Client совпадают, перезагрузите плагин и обновите конфигурацию.' })
           else if (!preserveStatus) setStatus(null)
         } catch (cause) {
           if (alive.current && version === settingsVersion.current) setStatus({ kind: 'error', text: cause instanceof Error ? cause.message : String(cause) })
@@ -437,12 +437,12 @@ window.__ModuleLoader__.load({
         const invalid = FIELDS.find((field) => field.numeric && dirty.current.has(field.key)
           && (!Number.isSafeInteger(draftRef.current[field.key]) || draftRef.current[field.key] < field.min || draftRef.current[field.key] > field.max))
         if (invalid) {
-          setStatus({ kind: 'error', text: invalid.label + '必须是 ' + invalid.min + '–' + invalid.max + ' 的整数。' })
+          setStatus({ kind: 'error', text: invalid.label + 'должно быть ' + invalid.min + '–' + invalid.max + ' — целое число.' })
           return
         }
         savingRef.current = true
         setSaving(true)
-        setStatus({ kind: 'busy', text: '保存中…' })
+        setStatus({ kind: 'busy', text: 'Сохранение…' })
         // 只提交用户改动过的字段，空串也是有效改动；未编辑字段遵循最新服务端值。
         // modelOverrides 是整份 map 一个字段，按同样方式提交。
         const ops = [...FIELDS.map((field) => field.key), OVERRIDES_KEY]
@@ -457,7 +457,7 @@ window.__ModuleLoader__.load({
           }
           setDirtyKeys([...dirty.current])
           setConflicts([])
-          setStatus({ kind: 'ok', text: '已保存。会话偏好从下一轮生效；代理用于后续请求及新启动的 ACP 进程，已有进程需重新加载插件才能切换代理。自动预热在下次启用插件时生效；当前已选模型保持不变。' })
+          setStatus({ kind: 'ok', text: 'Сохранено. Предпочтения сессии применяются со следующего хода; прокси используется для последующих запросов и новых процессов ACP, а уже запущенный процесс потребует перезагрузки плагина. Автопрогрев включится при следующем включении плагина; выбранная модель не меняется.' })
           await reload(true)
         } catch (cause) {
           if (!alive.current) return
@@ -497,7 +497,7 @@ window.__ModuleLoader__.load({
         setDraft(draftRef.current)
         setDirtyKeys([])
         setConflicts([])
-        setStatus({ kind: 'ok', text: '已撤销未保存的修改，恢复为当前宿主设置。' })
+        setStatus({ kind: 'ok', text: 'Несохранённые изменения отменены, восстановлены текущие настройки хоста.' })
       }
 
       const connection = connectionStatus(account, registered)
@@ -507,69 +507,69 @@ window.__ModuleLoader__.load({
       const readonly = !loading && view && !writable
       const advancedSummary = h('summary', { style: SUMMARY },
         h('span', { style: { display: 'grid', gap: '4px' } },
-          h('span', { style: { fontSize: '13px', fontWeight: 650 } }, '高级设置'),
-          h('small', { style: { fontSize: '11px', fontWeight: 400, opacity: .6 } }, '网络、CLI、会话恢复与进程生命周期')))
+          h('span', { style: { fontSize: '13px', fontWeight: 650 } }, 'Дополнительно'),
+          h('small', { style: { fontSize: '11px', fontWeight: 400, opacity: .6 } }, 'Сеть, CLI, восстановление сессий и жизненный цикл процессов')))
 
       return h('div', { style: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '720px', boxSizing: 'border-box', lineHeight: 1.5 } },
         h('header', { style: { display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '0 2px 2px' } },
           h('div', { style: { flex: 1, minWidth: 0 } },
             h('div', { style: { fontSize: '10px', fontWeight: 650, letterSpacing: '.1em', opacity: .5, marginBottom: '5px' } }, 'MODEL PROVIDER'),
             h('h2', { style: { margin: 0, fontSize: '20px', lineHeight: 1.35, fontWeight: 650, letterSpacing: '-.015em' } }, 'Antigravity ACP'),
-            h('p', { style: { margin: '6px 0 0', fontSize: '12px', opacity: .6 } }, '连接官方 Antigravity，模型与工具仍由 DSH 管理。')),
-          h('span', { title: 'Provider 路由：' + PROVIDER, style: { flex: '0 0 auto', padding: '4px 9px', borderRadius: '99px', fontSize: '11px', color: registered === false ? '#b42318' : registered === true ? '#177c55' : 'inherit', background: registered === false ? 'rgba(217,119,87,.10)' : registered === true ? 'rgba(37,184,121,.10)' : TRACK } }, registered === false ? '未注册' : registered === true ? 'Provider 已注册' : '正在检查路由')),
+            h('p', { style: { margin: '6px 0 0', fontSize: '12px', opacity: .6 } }, 'Подключение к официальному Antigravity; модели и инструменты по-прежнему под управлением DSH.')),
+          h('span', { title: 'Маршрут Provider: ' + PROVIDER, style: { flex: '0 0 auto', padding: '4px 9px', borderRadius: '99px', fontSize: '11px', color: registered === false ? '#b42318' : registered === true ? '#177c55' : 'inherit', background: registered === false ? 'rgba(217,119,87,.10)' : registered === true ? 'rgba(37,184,121,.10)' : TRACK } }, registered === false ? 'не зарегистрирован' : registered === true ? 'Provider зарегистрирован' : 'проверка маршрута')),
 
-        readonly ? h(StatusNotice, { status: { kind: 'busy', text: '当前设置为只读。你仍可查看连接状态与诊断；请在有写入权限的宿主中修改配置。' } }) : null,
+        readonly ? h(StatusNotice, { status: { kind: 'busy', text: 'Текущие настройки только для чтения. Состояние соединения и диагностику смотреть можно; изменяйте конфигурацию на хосте с правом записи.' } }) : null,
 
-        h('section', { style: PANEL, 'aria-label': '账户连接' },
-          h(SectionHeading, { eyebrow: '01 · 连接', title: '账户与连接', description: '先预热减少等待，或验证账户并读取模型目录。' }),
+        h('section', { style: PANEL, 'aria-label': 'Подключение аккаунта' },
+          h(SectionHeading, { eyebrow: '01 · Подключение', title: 'Аккаунт и соединение', description: 'Сначала прогрейте, чтобы не ждать, либо проверьте аккаунт и прочитайте каталог моделей.' }),
           h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px', borderRadius: '10px', background: 'rgba(128,128,128,.045)', marginBottom: '14px' } },
             h(StatusDot, { color: connection.color }),
             h('div', { style: { minWidth: 0 } },
               h('div', { style: { fontSize: '12px', fontWeight: 650, color: connection.color } }, connection.label),
               h('p', { role: 'status', style: { fontSize: '12px', lineHeight: 1.6, opacity: .7, overflowWrap: 'anywhere', margin: '3px 0 0' } }, connection.description))),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '8px' } },
-            h('button', { type: 'button', style: PRIMARY, disabled: !props.control || busy, onClick: () => accountAction('login') }, account?.state === 'connecting' ? '正在连接…' : '连接 / 登录 ACP'),
-            h('button', { type: 'button', style: ACTION, disabled: !props.control || busy || connection.ready, onClick: () => accountAction('warmup') }, connection.ready ? '已预热' : '立即预热'),
-            ['connecting', 'cancelling'].includes(account?.state) ? h('button', { type: 'button', style: ACTION, disabled: account?.state === 'cancelling', onClick: () => accountAction('cancel') }, account?.state === 'cancelling' ? '正在取消…' : '取消连接') : null),
-          h('p', { style: { opacity: .55, fontSize: '11px', lineHeight: 1.6, margin: '10px 0 0' } }, '预热不会发送聊天消息。仅在需要登录时打开官方授权页面；思考强度仍由会话菜单设置。')),
+            h('button', { type: 'button', style: PRIMARY, disabled: !props.control || busy, onClick: () => accountAction('login') }, account?.state === 'connecting' ? 'Подключение…' : 'Подключить / войти в ACP'),
+            h('button', { type: 'button', style: ACTION, disabled: !props.control || busy || connection.ready, onClick: () => accountAction('warmup') }, connection.ready ? 'прогрет' : 'Прогреть сразу'),
+            ['connecting', 'cancelling'].includes(account?.state) ? h('button', { type: 'button', style: ACTION, disabled: account?.state === 'cancelling', onClick: () => accountAction('cancel') }, account?.state === 'cancelling' ? 'Отмена…' : 'Отменить подключение') : null),
+          h('p', { style: { opacity: .55, fontSize: '11px', lineHeight: 1.6, margin: '10px 0 0' } }, 'Прогрев не отправляет сообщений в чат. Страница авторизации открывается только если нужен вход; уровень размышления по-прежнему задаётся в меню сессии.')),
 
-        h('section', { style: PANEL, 'aria-label': '模型列表' },
-          h(SectionHeading, { eyebrow: '02 · 模型', title: '模型列表', description: '目录中的模型是否出现在 DSH 选择器，以及各自的默认思考档位与官方 ID 映射。',
-            action: h('button', { type: 'button', title: '从官方 CLI 或 ACP 会话重新读取模型目录', 'aria-busy': modelBusy || undefined, style: { ...ACTION, flex: '0 0 auto', whiteSpace: 'nowrap' }, disabled: modelBusy || !props.control, onClick: () => pullModels(true) }, modelBusy ? '正在刷新…' : '刷新模型目录') }),
+        h('section', { style: PANEL, 'aria-label': 'Список моделей' },
+          h(SectionHeading, { eyebrow: '02 · Модели', title: 'Список моделей', description: 'Какие модели каталога попадают в селектор DSH, их уровень размышления по умолчанию и сопоставление с официальными ID.',
+            action: h('button', { type: 'button', title: 'Перечитать каталог моделей из официального CLI или ACP-сессии', 'aria-busy': modelBusy || undefined, style: { ...ACTION, flex: '0 0 auto', whiteSpace: 'nowrap' }, disabled: modelBusy || !props.control, onClick: () => pullModels(true) }, modelBusy ? 'Обновление…' : 'Обновить каталог моделей') }),
           h(ModelOverrideList, { rows: rows, overrides: draft[OVERRIDES_KEY], disabled: editingDisabled, onEdit: editOverride }),
           modelMessage ? h('p', { role: 'status', style: { fontSize: '11px', lineHeight: 1.6, opacity: .65, margin: '10px 0 0', overflowWrap: 'anywhere' } }, modelMessage) : null),
 
-        h('section', { style: PANEL, 'aria-label': '常用设置' },
-          h(SectionHeading, { eyebrow: '03 · 偏好', title: '常用设置', description: '适合大多数使用场景；其它选项保持默认即可。' }),
+        h('section', { style: PANEL, 'aria-label': 'Основные настройки' },
+          h(SectionHeading, { eyebrow: '03 · Предпочтения', title: 'Основные настройки', description: 'Подходит для большинства случаев; остальные параметры можно оставить по умолчанию.' }),
           h(SettingsFields, { ...fieldProps, fields: fieldsFor('general') })),
 
-        h('details', { style: PANEL, 'aria-label': '高级设置' }, advancedSummary,
+        h('details', { style: PANEL, 'aria-label': 'Дополнительно' }, advancedSummary,
           h('div', { style: { display: 'grid', gap: '24px', marginTop: '20px', paddingTop: '18px', borderTop: '1px solid rgba(128,128,128,.14)' } },
-            h('section', { 'aria-label': '网络与 CLI 设置', style: { display: 'grid', gap: '16px' } },
-              h('h4', { style: { margin: 0, fontSize: '12px', fontWeight: 650 } }, '网络与 CLI'),
+            h('section', { 'aria-label': 'Настройки сети и CLI', style: { display: 'grid', gap: '16px' } },
+              h('h4', { style: { margin: 0, fontSize: '12px', fontWeight: 650 } }, 'Сеть и CLI'),
               h(SettingsFields, { ...fieldProps, fields: fieldsFor('network') })),
-            h('section', { 'aria-label': '会话与进程设置', style: { display: 'grid', gap: '16px' } },
-              h('h4', { style: { margin: 0, fontSize: '12px', fontWeight: 650 } }, '会话与进程'),
+            h('section', { 'aria-label': 'Настройки сессий и процессов', style: { display: 'grid', gap: '16px' } },
+              h('h4', { style: { margin: 0, fontSize: '12px', fontWeight: 650 } }, 'Сессии и процессы'),
               h(SettingsFields, { ...fieldProps, fields: fieldsFor('advanced') })))),
 
-        h('details', { style: PANEL, 'aria-label': '连接诊断' },
+        h('details', { style: PANEL, 'aria-label': 'Диагностика соединения' },
           h('summary', { style: SUMMARY },
             h('span', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
               h(StatusDot, { color: connection.color }),
-              h('span', { style: { fontSize: '13px', fontWeight: 650 } }, '连接诊断')),
-            h('small', { style: { fontSize: '11px', opacity: .6 } }, '状态、并发与耗时')),
+              h('span', { style: { fontSize: '13px', fontWeight: 650 } }, 'Диагностика соединения')),
+            h('small', { style: { fontSize: '11px', opacity: .6 } }, 'Состояние, параллельность и тайминги')),
           h('div', { style: { marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(128,128,128,.14)' } },
-            account?.runtime ? RuntimeDetails({ runtime: account.runtime }) : h('p', { style: { margin: 0, fontSize: '12px', opacity: .6 } }, '连接后显示生命周期、并发容量与分阶段耗时。'))),
+            account?.runtime ? RuntimeDetails({ runtime: account.runtime }) : h('p', { style: { margin: 0, fontSize: '12px', opacity: .6 } }, 'После подключения здесь появятся жизненный цикл, ёмкость и тайминги по этапам.'))),
 
         h('footer', { style: { display: 'grid', gap: '10px', padding: '4px 2px 0' } },
-          conflicts.length ? h('p', { role: 'alert', style: { margin: 0, fontSize: '12px', lineHeight: 1.6, color: '#946200' } }, '其他位置更新了以下设置，已保留你的输入：' + conflicts.map((key) => key === OVERRIDES_KEY ? OVERRIDES_LABEL : FIELDS.find((field) => field.key === key)?.label ?? key).join('、') + '。请核对后再保存。') : null,
+          conflicts.length ? h('p', { role: 'alert', style: { margin: 0, fontSize: '12px', lineHeight: 1.6, color: '#946200' } }, 'Настройки ниже изменены в другом месте, ваши введённые значения сохранены: ' + conflicts.map((key) => key === OVERRIDES_KEY ? OVERRIDES_LABEL : FIELDS.find((field) => field.key === key)?.label ?? key).join(', ') + '. Сверьте и сохраните.') : null,
           h(StatusNotice, { status }),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' } },
-            h('button', { type: 'button', onClick: save, disabled: editingDisabled || dirtyKeys.length === 0, style: PRIMARY }, saving ? '保存中…' : '保存'),
-            dirtyKeys.length ? h('button', { type: 'button', disabled: loading || saving, onClick: discardDraft, style: ACTION }, '撤销未保存修改') : null,
-            h('button', { type: 'button', title: '重新读取宿主配置，保留未保存的输入', disabled: loading || saving, onClick: () => reload(), style: { ...ACTION, borderColor: 'transparent', background: 'transparent', opacity: .7, marginLeft: 'auto' } }, loading ? '刷新中…' : '刷新配置')),
-          dirtyKeys.length ? h('p', { role: 'status', style: { margin: 0, fontSize: '11px', opacity: .65 } }, '有 ' + dirtyKeys.length + ' 项未保存的修改；刷新会保留这些输入。') : null,
-          h('p', { style: { margin: '2px 0 0', paddingTop: '12px', borderTop: '1px solid rgba(128,128,128,.12)', fontSize: '11px', lineHeight: 1.6, opacity: .55 } }, '套餐额度与 AI Credits 请在对话输入框旁的额度药丸中查看，此处不再重复展示。')))
+            h('button', { type: 'button', onClick: save, disabled: editingDisabled || dirtyKeys.length === 0, style: PRIMARY }, saving ? 'Сохранение…' : 'Сохранить'),
+            dirtyKeys.length ? h('button', { type: 'button', disabled: loading || saving, onClick: discardDraft, style: ACTION }, 'Отменить несохранённые') : null,
+            h('button', { type: 'button', title: 'Перечитать конфигурацию хоста, сохранив несохранённые введённые значения', disabled: loading || saving, onClick: () => reload(), style: { ...ACTION, borderColor: 'transparent', background: 'transparent', opacity: .7, marginLeft: 'auto' } }, loading ? 'Обновление…' : 'Обновить конфигурацию')),
+          dirtyKeys.length ? h('p', { role: 'status', style: { margin: 0, fontSize: '11px', opacity: .65 } }, 'Есть ' + dirtyKeys.length + ' несохранённых изменений; обновление сохранит введённые значения.') : null,
+          h('p', { style: { margin: '2px 0 0', paddingTop: '12px', borderTop: '1px solid rgba(128,128,128,.12)', fontSize: '11px', lineHeight: 1.6, opacity: .55 } }, 'Квоты тарифа и AI Credits смотрите в «пилюле» рядом с полем ввода — здесь они не дублируются.')))
     }
 
     /**
@@ -616,16 +616,16 @@ window.__ModuleLoader__.load({
       return '#25b879'
     }
     function windowName(bucket) {
-      return ({ '5h': '5 小时', weekly: '每周', '7d': '每周' })[bucket.window] ?? bucket.window ?? bucket.name ?? '额度窗口'
+      return ({ '5h': '5 часов', weekly: 'неделя', '7d': 'неделя' })[bucket.window] ?? bucket.window ?? bucket.name ?? 'окно квоты'
     }
     function resetCountdown(value) {
       const seconds = Math.ceil((Date.parse(value) - Date.now()) / 1000)
-      if (!Number.isFinite(seconds)) return '未提供重置时间'
-      if (seconds <= 0) return '重置时间已到，待刷新'
+      if (!Number.isFinite(seconds)) return 'время сброса не указано'
+      if (seconds <= 0) return 'время сброса наступило, ждёт обновления'
       const minutes = Math.ceil(seconds / 60)
-      if (minutes >= 1440) return Math.floor(minutes / 1440) + '天 ' + Math.floor(minutes % 1440 / 60) + '小时后重置'
-      if (minutes >= 60) return Math.floor(minutes / 60) + '小时 ' + minutes % 60 + '分钟后重置'
-      return minutes + '分钟后重置'
+      if (minutes >= 1440) return Math.floor(minutes / 1440) + ' д ' + Math.floor(minutes % 1440 / 60) + ' ч до сброса'
+      if (minutes >= 60) return Math.floor(minutes / 60) + ' ч ' + minutes % 60 + ' мин до сброса'
+      return minutes + ' мин до сброса'
     }
     function remainingBar(bucket, compact, stale, label) {
       const pct = percentage(bucket)
@@ -633,7 +633,7 @@ window.__ModuleLoader__.load({
       return h('span', {
         role: 'progressbar', 'aria-label': label,
         'aria-valuemin': 0, 'aria-valuemax': 100,
-        ...(unknown ? { 'aria-valuetext': bucket.disabled ? '已停用' : '额度未知' } : { 'aria-valuenow': pct }),
+        ...(unknown ? { 'aria-valuetext': bucket.disabled ? 'отключено' : 'квота неизвестна' } : { 'aria-valuenow': pct }),
         style: { display: 'block', width: compact ? '30px' : '100%', height: compact ? '4px' : '6px', borderRadius: '99px', overflow: 'hidden', background: TRACK },
       }, h('span', { style: { display: 'block', height: '100%', width: unknown ? '100%' : pct + '%', opacity: unknown ? .35 : 1, borderRadius: '99px', background: tone(bucket, stale) } }))
     }
@@ -668,40 +668,40 @@ window.__ModuleLoader__.load({
     }
     function CreditsDetails({ credits, pending }) {
       const valid = credits?.status === 'ok' && Number.isSafeInteger(credits.remainingCredits) && credits.remainingCredits >= 0
-      const label = valid ? credits.remainingCredits.toLocaleString() : pending ? '正在读取…' : credits?.status === 'error' ? '查询失败' : '未提供'
-      return h('section', { style: CARD, 'aria-label': 'AI Credits 余额' },
+      const label = valid ? credits.remainingCredits.toLocaleString() : pending ? 'Чтение…' : credits?.status === 'error' ? 'ошибка запроса' : 'не указано'
+      return h('section', { style: CARD, 'aria-label': 'Баланс AI Credits' },
         h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' } },
-          h('strong', null, 'AI Credits 余额'),
+          h('strong', null, 'Баланс AI Credits'),
           h('strong', { style: { fontSize: valid ? '20px' : '13px', fontVariantNumeric: 'tabular-nums', color: credits?.stale ? '#d99b28' : 'inherit' } }, label)),
-        credits?.planName ? h('div', { style: { fontSize: '11px', opacity: .7, marginTop: '6px' } }, '套餐：' + credits.planName) : null,
-        credits?.stale ? h('p', { role: 'status', style: { margin: '6px 0 0', fontSize: '11px', color: '#d99b28' } }, '余额缓存 · ' + (credits.staleReason ?? '余额刷新失败')) : null,
+        credits?.planName ? h('div', { style: { fontSize: '11px', opacity: .7, marginTop: '6px' } }, 'Тариф: ' + credits.planName) : null,
+        credits?.stale ? h('p', { role: 'status', style: { margin: '6px 0 0', fontSize: '11px', color: '#d99b28' } }, 'кеш баланса · ' + (credits.staleReason ?? 'не удалось обновить баланс')) : null,
         credits?.error?.message ? h('p', { role: credits.status === 'error' ? 'alert' : 'status', style: { margin: '6px 0 0', fontSize: '11px', overflowWrap: 'anywhere' } }, credits.error.message) : null,
-        credits?.updatedAt ? h('div', { style: { marginTop: '6px', fontSize: '10px', opacity: .55 } }, (valid ? '余额更新于 ' : '最近查询 ') + new Date(credits.updatedAt).toLocaleString()) : null)
+        credits?.updatedAt ? h('div', { style: { marginTop: '6px', fontSize: '10px', opacity: .55 } }, (valid ? 'баланс обновлён ' : 'последний запрос ') + new Date(credits.updatedAt).toLocaleString()) : null)
     }
     function QuotaDetails({ data, refreshing, load, model }) {
       return h('div', { style: { display: 'grid', gap: '12px' } },
         h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } },
-          h('strong', { style: { fontSize: '14px', flex: 1 } }, 'Antigravity · 套餐额度'),
+          h('strong', { style: { fontSize: '14px', flex: 1 } }, 'Antigravity · квоты тарифа'),
           data?.plan ? h('span', { style: { fontSize: '11px', padding: '2px 8px', background: TRACK, borderRadius: '99px' } }, data.plan) : null),
-        data?.stale ? h('p', { role: 'status', style: { ...CARD, margin: 0, color: '#d99b28', fontSize: '12px' } }, '缓存数据 · ' + (data.staleReason ?? '刷新失败')) : null,
-        data?.status === 'error' ? h('p', { role: 'alert', style: { margin: 0, color: '#ef4444', overflowWrap: 'anywhere' } }, data.error?.message ?? data.error?.text ?? '额度读取失败') : null,
-        ...quotaGroups(data).map((group) => h('section', { key: group.key, style: CARD, 'aria-label': group.name + '额度' },
+        data?.stale ? h('p', { role: 'status', style: { ...CARD, margin: 0, color: '#d99b28', fontSize: '12px' } }, 'кешированные данные · ' + (data.staleReason ?? 'обновление не удалось')) : null,
+        data?.status === 'error' ? h('p', { role: 'alert', style: { margin: 0, color: '#ef4444', overflowWrap: 'anywhere' } }, data.error?.message ?? data.error?.text ?? 'не удалось прочитать квоту') : null,
+        ...quotaGroups(data).map((group) => h('section', { key: group.key, style: CARD, 'aria-label': group.name + 'квота' },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' } },
             h('strong', { style: { fontSize: '13px' } }, group.name),
-            group.key === modelGroup(model) ? h('span', { style: { fontSize: '10px', padding: '2px 6px', borderRadius: '6px', color: '#25b879', background: 'rgba(37,184,121,.12)' } }, '当前模型') : null),
+            group.key === modelGroup(model) ? h('span', { style: { fontSize: '10px', padding: '2px 6px', borderRadius: '6px', color: '#25b879', background: 'rgba(37,184,121,.12)' } }, 'текущая модель') : null),
           group.buckets.length ? h('div', { style: { display: 'grid', gap: '12px' } }, ...group.buckets.map((bucket, index) => {
             const pct = percentage(bucket)
             return h('div', { key: index },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px', marginBottom: '6px' } },
                 h('span', { style: { fontSize: '12px', opacity: .75 } }, windowName(bucket)),
-                h('strong', { style: { fontSize: '16px', fontVariantNumeric: 'tabular-nums' } }, bucket.disabled ? '已停用' : pct === undefined ? '未知' : Math.round(pct) + '%', h('small', { style: { fontSize: '10px', fontWeight: 400, opacity: .6, marginLeft: '4px' } }, '剩余'))),
-              remainingBar(bucket, false, data?.stale, group.name + ' ' + windowName(bucket) + '剩余额度'),
-              h('div', { title: bucket.resetTime, style: { fontSize: '10px', opacity: .6, marginTop: '5px' } }, bucket.disabled ? bucket.description ?? '此窗口不可用' : resetCountdown(bucket.resetTime)))
-          })) : h('span', { style: { opacity: .55, fontSize: '12px' } }, data ? '未提供额度数据' : '正在读取…'))),
+                h('strong', { style: { fontSize: '16px', fontVariantNumeric: 'tabular-nums' } }, bucket.disabled ? 'отключено' : pct === undefined ? 'неизвестно' : Math.round(pct) + '%', h('small', { style: { fontSize: '10px', fontWeight: 400, opacity: .6, marginLeft: '4px' } }, 'остаток'))),
+              remainingBar(bucket, false, data?.stale, group.name + ' ' + windowName(bucket) + 'остаток квоты'),
+              h('div', { title: bucket.resetTime, style: { fontSize: '10px', opacity: .6, marginTop: '5px' } }, bucket.disabled ? bucket.description ?? 'это окно недоступно' : resetCountdown(bucket.resetTime)))
+          })) : h('span', { style: { opacity: .55, fontSize: '12px' } }, data ? 'данные о квотах не предоставлены' : 'Чтение…'))),
         CreditsDetails({ credits: data?.credits, pending: !data }),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
-          h('small', { style: { flex: 1, opacity: .55, minWidth: 0 } }, data?.updatedAt ? '更新于 ' + new Date(data.updatedAt).toLocaleString() : '尚无成功快照'),
-          h('button', { type: 'button', disabled: refreshing || !load, onClick: () => load(true), style: ACTION }, refreshing ? '刷新中…' : '刷新额度')))
+          h('small', { style: { flex: 1, opacity: .55, minWidth: 0 } }, data?.updatedAt ? 'обновлено ' + new Date(data.updatedAt).toLocaleString() : 'успешных снимков ещё нет'),
+          h('button', { type: 'button', disabled: refreshing || !load, onClick: () => load(true), style: ACTION }, refreshing ? 'Обновление…' : 'Обновить квоты')))
     }
     function useAcpWarmup(control, enabled) {
       const [account, setAccount] = React.useState(undefined)
@@ -780,29 +780,29 @@ window.__ModuleLoader__.load({
       const group = groups.find((g) => g.key === family && (family !== 'argon' || g.buckets.length > 0))
         ?? (family === 'argon' ? groups.find((g) => g.key === 'gemini') : undefined)
       const buckets = group?.buckets ?? []
-      const label = quota.data?.status === 'error' ? '额度读取失败' : !quota.data ? '正在读取额度' : !group ? '额度未匹配，请选择具体模型' : !buckets.length ? '额度未知' : buckets.map((b) => windowName(b) + ' ' + (b.disabled ? '已停用' : percentage(b) === undefined ? '额度未知' : Math.round(percentage(b)) + '% 剩余')).join(' · ')
-      const title = String(model ?? '未选择模型') + ' · ' + label + (quota.data?.stale ? ' · 缓存数据' : '')
+      const label = quota.data?.status === 'error' ? 'не удалось прочитать квоту' : !quota.data ? 'чтение квоты' : !group ? 'квота не сопоставлена — выберите конкретную модель' : !buckets.length ? 'квота неизвестна' : buckets.map((b) => windowName(b) + ' ' + (b.disabled ? 'отключено' : percentage(b) === undefined ? 'квота неизвестна' : Math.round(percentage(b)) + '% осталось')).join(' · ')
+      const title = String(model ?? 'модель не выбрана') + ' · ' + label + (quota.data?.stale ? ' · кешированные данные' : '')
       const runtime = warmup.account?.runtime
       const warming = warmup.pending || ['connecting', 'cancelling'].includes(warmup.account?.state)
         || ['binary', 'credentials', 'spawn', 'initialize', 'authenticate'].includes(runtime?.phase)
       const working = !warming && runtimeBusy(runtime)
       const ready = runtime?.phase === 'ready'
       const failed = warmup.account?.state === 'error' || runtime?.phase === 'error'
-      const warmupLabel = warming ? '预热中…' : runtime?.queue?.waiting > 0 ? '排队 ' + runtime.queue.waiting : working ? '运行中' : ready ? '已预热' : failed ? '重试预热' : '预热'
+      const warmupLabel = warming ? 'прогрев…' : runtime?.queue?.waiting > 0 ? 'в очереди ' + runtime.queue.waiting : working ? 'работает' : ready ? 'прогрет' : failed ? 'повторить прогрев' : 'прогрев'
       const warmupTitle = runtime ? (RUNTIME_PHASES[runtime.phase] ?? runtime.phase) + ' · ' + duration(runtime.phaseElapsedMs)
-        + (runtime.queue ? ' · 运行 ' + runtime.queue.active + ' · 等待工具 ' + runtime.queue.parked + ' · 排队 ' + runtime.queue.waiting : '')
-        + (runtime.error ? ' · ' + runtime.error : '') : warmup.account?.message ?? '提前启动 ACP 连接，不发送模型消息'
+        + (runtime.queue ? ' · активных ' + runtime.queue.active + ' · ждут инструмент ' + runtime.queue.parked + ' · в очереди ' + runtime.queue.waiting : '')
+        + (runtime.error ? ' · ' + runtime.error : '') : warmup.account?.message ?? 'заранее поднять ACP-соединение, не отправляя сообщений модели'
       return h('span', { ref: root, style: { position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '6px' } },
         h('button', { ref: button, type: 'button', title, 'aria-label': title, 'aria-expanded': expanded, 'aria-haspopup': 'dialog', onClick: () => setExpanded((value) => !value),
           style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px 10px', minHeight: '26px', borderRadius: '99px', border: '1px solid rgba(128,128,128,.28)', background: 'transparent', color: 'inherit', cursor: 'pointer' } },
-          buckets.length ? h('span', { style: { display: 'grid', gap: '3px' } }, ...buckets.map((b, i) => h('span', { key: i }, remainingBar(b, true, quota.data?.stale, group.name + ' ' + windowName(b) + '剩余额度')))) : h('span', { 'aria-hidden': true }, quota.data?.status === 'error' ? '!' : quota.data ? '?' : '…')),
+          buckets.length ? h('span', { style: { display: 'grid', gap: '3px' } }, ...buckets.map((b, i) => h('span', { key: i }, remainingBar(b, true, quota.data?.stale, group.name + ' ' + windowName(b) + 'остаток квоты')))) : h('span', { 'aria-hidden': true }, quota.data?.status === 'error' ? '!' : quota.data ? '?' : '…')),
         control ? h('button', {
-          type: 'button', title: warmupTitle, 'aria-label': '预热 ACP', 'aria-busy': warming,
+          type: 'button', title: warmupTitle, 'aria-label': 'Прогреть ACP', 'aria-busy': warming,
           disabled: Boolean(warming || working || ready), onClick: () => warmup.run('warmup'),
           style: { ...ACTION, padding: '4px 9px', minHeight: '26px', borderRadius: '99px', fontSize: '11px', whiteSpace: 'nowrap',
             color: ready ? '#25b879' : failed ? '#e5534b' : 'inherit', cursor: warming || working || ready ? 'default' : 'pointer' },
         }, warmupLabel) : null,
-        expanded ? h('div', { role: 'dialog', 'aria-label': 'Antigravity 额度详情', style: { position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, zIndex: 50, width: 'min(340px, calc(100vw - 48px))', maxHeight: 'min(75vh, calc(100vh - 72px))', overflowY: 'auto', boxSizing: 'border-box', overflowWrap: 'anywhere', padding: '16px', borderRadius: '16px', background: 'var(--dsh-surface, Canvas)', color: 'var(--dsh-text, CanvasText)', border: '1px solid rgba(128,128,128,.25)', boxShadow: '0 14px 40px rgba(0,0,0,.22)', fontSize: '12px', ...position } },
+        expanded ? h('div', { role: 'dialog', 'aria-label': 'Квоты Antigravity', style: { position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, zIndex: 50, width: 'min(340px, calc(100vw - 48px))', maxHeight: 'min(75vh, calc(100vh - 72px))', overflowY: 'auto', boxSizing: 'border-box', overflowWrap: 'anywhere', padding: '16px', borderRadius: '16px', background: 'var(--dsh-surface, Canvas)', color: 'var(--dsh-text, CanvasText)', border: '1px solid rgba(128,128,128,.25)', boxShadow: '0 14px 40px rgba(0,0,0,.22)', fontSize: '12px', ...position } },
           QuotaDetails({ ...quota, model })) : null)
     }
 
@@ -834,11 +834,11 @@ window.__ModuleLoader__.load({
             return await withTimeout(
               service.read(force ? { force: true } : undefined),
               60_000,
-              '额度读取超时（Host 侧 agy CLI 60 秒内没有返回）',
+              'таймаут чтения квоты (agy CLI на стороне Host не ответил за 60 секунд)',
             )
           }
           if (Date.now() >= deadline) {
-            throw new Error('额度服务未就绪（Host 端 remote.agyQuota 未挂载）')
+            throw new Error('сервис квот не готов (на Host не смонтирован remote.agyQuota)')
           }
           await new Promise((resolve) => setTimeout(resolve, 500))
         }
@@ -854,16 +854,16 @@ window.__ModuleLoader__.load({
 
     function makeControlReader(scope) {
       return async (method, request) => {
-        if (!['account', 'models'].includes(method)) throw new Error('不支持的设置操作')
+        if (!['account', 'models'].includes(method)) throw new Error('неподдерживаемая операция настроек')
         const deadline = Date.now() + 20_000
         for (;;) {
           const service = scope.get('remote.agyQuota')
           if (typeof service?.[method] === 'function') {
             const pending = service[method](request)
             // 目录发现可能包含冷启动；各阶段超时由 Host 管理，客户端不另设更短的总期限。
-            return method === 'models' ? await pending : await withTimeout(pending, 60_000, '设置操作超时，请重试')
+            return method === 'models' ? await pending : await withTimeout(pending, 60_000, 'таймаут операции настроек, повторите попытку')
           }
-          if (Date.now() >= deadline) throw new Error('设置控制服务未就绪，请确认 Host 与 Client 版本一致')
+          if (Date.now() >= deadline) throw new Error('сервис управления настройками не готов; проверьте совпадение версий Host и Client')
           await new Promise((resolve) => setTimeout(resolve, 500))
         }
       }
@@ -956,7 +956,7 @@ window.__ModuleLoader__.load({
           const mounted = ctx.remote.$mount(AGY_QUOTA_REMOTE)
           ctx.effect(() => mounted, 'antigravity-acp: mount quota remote')
         } catch (error) {
-          console.error('[dsh-bundle-antigravity-host] 额度 remote 客户端挂载失败:', error)
+          console.error('[dsh-bundle-antigravity-host] не удалось смонтировать клиентский remote квот:', error)
         }
         ctx.effect(
           () =>
