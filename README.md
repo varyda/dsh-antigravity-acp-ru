@@ -11,13 +11,18 @@
 > **Версия пакета:** `0.1.31-ru.1`. Ключи и токены в репозиторий не входят — плагин читает их
 > из хранилища credentials DSH (`~/.dsh/.credentials.yaml`, ссылка `AGY_*`/OAuth) или из окружения хоста.
 >
-> **Установка** (профиль `web` замените на свой, например `desktop`):
+> **Установка** (профиль `web` замените на свой, например `desktop`) — ставится прямо из ассета релиза,
+> собранный `dist/` уже внутри:
 >
 > ```bash
-> dsh plugin --profile desktop add github:<ваш-логин>/dsh-antigravity-acp-ru#main
+> dsh plugin --profile desktop add \
+>   https://github.com/varyda/dsh-antigravity-acp-ru/releases/download/v0.1.31-ru.1/dsh-bundle-antigravity-host-0.1.31-ru.1.tgz
 > ```
 >
-> Либо скачать tarball из Releases и поставить `file:`-ссылкой. После установки — перезапуск
+> Либо скачать `.tgz` из [Releases](https://github.com/varyda/dsh-antigravity-acp-ru/releases) и поставить
+> `file:<путь к tgz>`. Установка через `github:` **не подойдёт**: в репозитории лежат только исходники без
+> собранного `dist/` — нужен либо ассет релиза, либо локальная сборка (`pnpm i && pnpm run build`).
+> После установки — перезапуск
 > приложения и вход: **Настройки → Antigravity ACP → «Подключить / войти в ACP»**.
 >
 > Оригинал, английская/китайская документация и обсуждение — в upstream-репозитории.
